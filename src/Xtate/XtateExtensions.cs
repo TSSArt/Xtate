@@ -17,6 +17,8 @@
 
 #endregion
 
+using Xtate.Service;
+
 namespace Xtate
 {
 	public static class XtateExtensions
@@ -28,6 +30,7 @@ namespace Xtate
 						.AddHttpClient()
 						.AddSmtpClient()
 						.AddResourceLoader(ResxResourceLoader.Instance)
+						.AddResourceLoader(FileResourceLoader.Instance)
 						.AddResourceLoader(WebResourceLoader.Instance);
 	}
 }
