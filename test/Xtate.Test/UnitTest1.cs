@@ -17,7 +17,10 @@
 
 #endregion
 
+//using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xtate.IoC;
+
 
 namespace Xtate.Test
 {
@@ -27,7 +30,9 @@ namespace Xtate.Test
 		[TestMethod]
 		public void TestMethod1()
 		{
-			new StateMachineHostBuilder().AddAll().Build();
+			var serviceCollection = new ServiceCollection();
+			serviceCollection.RegisterXtate();
+			serviceCollection.BuildProvider();
 		}
 	}
 }

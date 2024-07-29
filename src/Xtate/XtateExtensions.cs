@@ -17,10 +17,14 @@
 
 #endregion
 
+using Xtate.IoC;
+
 namespace Xtate
 {
 	public static class XtateExtensions
 	{
+		//TODO:delete
+		/*
 		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
 				builder
 						.AddXPath()
@@ -30,5 +34,13 @@ namespace Xtate
 						.AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
 						.AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
 						.AddResourceLoaderFactory(WebResourceLoaderFactory.Instance);
+		*/
+		public static void RegisterXtate(this IServiceCollection services)
+		{
+			if (services.IsRegistered<int>())
+			{
+				return;
+			}
+		}
 	}
 }
