@@ -1,5 +1,5 @@
-#region Copyright © 2019-2021 Sergii Artemenko
-
+// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,24 +15,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 //using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.IoC;
 
+namespace Xtate.Test;
 
-namespace Xtate.Test
+[TestClass]
+public class UnitTest1
 {
-	[TestClass]
-	public class UnitTest1
+	[TestMethod]
+	public void TestMethod1()
 	{
-		[TestMethod]
-		public void TestMethod1()
-		{
-			var serviceCollection = new ServiceCollection();
-			serviceCollection.RegisterXtate();
-			serviceCollection.BuildProvider();
-		}
+		var serviceCollection = new ServiceCollection();
+		serviceCollection.RegisterXtate();
+		serviceCollection.BuildProvider();
 	}
 }
