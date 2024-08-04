@@ -29,7 +29,7 @@ public class UnitTest1
 	public void TestMethod1()
 	{
 		var serviceCollection = new ServiceCollection();
-		serviceCollection.RegisterXtate();
+		serviceCollection.AddModule<XtateModule>();
 		serviceCollection.BuildProvider();
 	}
 }

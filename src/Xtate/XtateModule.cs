@@ -19,8 +19,10 @@ using Xtate.IoC;
 
 namespace Xtate;
 
-public static class XtateExtensions
+public class XtateModule : Module
 {
+	protected override void AddServices() { }
+
 	//TODO:delete
 	/*
 	public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
@@ -33,8 +35,4 @@ public static class XtateExtensions
 					.AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
 					.AddResourceLoaderFactory(WebResourceLoaderFactory.Instance);
 	*/
-	public static void RegisterXtate(this IServiceCollection services)
-	{
-		if (services.IsRegistered<int>()) { }
-	}
 }
