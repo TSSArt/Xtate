@@ -1,39 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Condition="'$(Version)'==''" Project="..\..\Version.props" />
+	<Import Condition="'$(Version)'==''" Project="..\..\Version.props" />
 
-  <PropertyGroup>
-    <TargetFrameworks>net8.0;netstandard2.0;net462</TargetFrameworks>
-    <PackageId>Xtate</PackageId>
-    <RepositoryUrl>https://github.com/TSSArt/Xtate</RepositoryUrl>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;netstandard2.0;net462</TargetFrameworks>
+		<PackageId>Xtate</PackageId>
+		<RepositoryUrl>https://github.com/TSSArt/Xtate</RepositoryUrl>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.0.0.1" PrivateAssets="all" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Xtate.SharedContent" Version="0.*" />
+		<PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.0.0.1" PrivateAssets="all" />
+	</ItemGroup>
 
-  <ItemGroup Condition="'$(UseProjectReference)'=='true'">
-    <ProjectReference Include="$(XtateCoreRepoPath)src\Xtate.Core\Xtate.Core.csproj" />
-    <ProjectReference Include="$(XtateDataModelEcmaScriptRepoPath)src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
-    <ProjectReference Include="$(XtateLoggerSerilogRepoPath)src\Xtate.Logger.Serilog\Xtate.Logger.Serilog.csproj" />
-    <ProjectReference Include="$(XtateIoProcessorHttpRepoPath)src\Xtate.IoProcessor.Http\Xtate.IoProcessor.Http.csproj" />
-    <ProjectReference Include="$(XtateServiceHttpClientRepoPath)src\Xtate.Service.HttpClient\Xtate.Service.HttpClient.csproj" />
-    <ProjectReference Include="$(XtateServiceSmtpClientRepoPath)src\Xtate.Service.SmtpClient\Xtate.Service.SmtpClient.csproj" />
-  </ItemGroup>
+	<ItemGroup Condition="'$(UseProjectReference)'=='true'">
+		<ProjectReference Include="$(XtateIocRepoPath)src\Xtate.IoC\Xtate.IoC.csproj" />
+		<ProjectReference Include="$(XtateCoreRepoPath)src\Xtate.Core\Xtate.Core.csproj" />
+		<ProjectReference Include="$(XtateDataModelEcmaScriptRepoPath)src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
+		<ProjectReference Include="$(XtateLoggerSerilogRepoPath)src\Xtate.Logger.Serilog\Xtate.Logger.Serilog.csproj" />
+		<ProjectReference Include="$(XtateIoProcessorHttpRepoPath)src\Xtate.IoProcessor.Http\Xtate.IoProcessor.Http.csproj" />
+		<ProjectReference Include="$(XtateServiceHttpClientRepoPath)src\Xtate.Service.HttpClient\Xtate.Service.HttpClient.csproj" />
+		<ProjectReference Include="$(XtateServiceSmtpClientRepoPath)src\Xtate.Service.SmtpClient\Xtate.Service.SmtpClient.csproj" />
+	</ItemGroup>
 
-  <ItemGroup Condition="'$(UseProjectReference)'==''">
-    <PackageReference Include="Xtate.Core" Version="0.*" />
-    <PackageReference Include="Xtate.DataModel.EcmaScript" Version="0.*" />
-    <PackageReference Include="Xtate.Logger.Serilog" Version="0.*" />
-    <PackageReference Include="Xtate.IoProcessor.Http" Version="0.*" />
-    <PackageReference Include="Xtate.Service.HttpClient" Version="0.*" />
-    <PackageReference Include="Xtate.Service.SmtpClient" Version="0.*" />
-  </ItemGroup>
+	<ItemGroup Condition="'$(UseProjectReference)'==''">
+		<PackageReference Include="Xtate.IoC" Version="0.*" />
+		<PackageReference Include="Xtate.Core" Version="0.*" />
+		<PackageReference Include="Xtate.DataModel.EcmaScript" Version="0.*" />
+		<PackageReference Include="Xtate.Logger.Serilog" Version="0.*" />
+		<PackageReference Include="Xtate.IoProcessor.Http" Version="0.*" />
+		<PackageReference Include="Xtate.Service.HttpClient" Version="0.*" />
+		<PackageReference Include="Xtate.Service.SmtpClient" Version="0.*" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(MSBuildProjectName).Test</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>$(MSBuildProjectName).Test</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 </Project>
