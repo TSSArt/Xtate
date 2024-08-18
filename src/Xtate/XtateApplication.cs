@@ -16,7 +16,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Xtate.Builder;
+using Xtate.Core;
 using Xtate.IoC;
 
 namespace Xtate;
@@ -45,4 +48,31 @@ public class XtateApplication : IDisposable, IAsyncDisposable
 #endregion
 
 	public static XtateApplication Create() => new();
+
+	public StateMachineFluentBuilder CreateStateMachineBuilder() => _provider.GetRequiredServiceSync<StateMachineFluentBuilder>();
+
+	public async ValueTask Start()
+	{
+		var host = await _provider.GetRequiredService<IHost>().ConfigureAwait(false);
+
+		await host.StartHost().ConfigureAwait(false);
+	}
+	
+	public async ValueTask Stop()
+	{
+		var host = await _provider.GetRequiredService<IHost>().ConfigureAwait(false);
+
+		await host.StopHost().ConfigureAwait(false);
+	}
+
+	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, CancellationToken token = default)
+	{
+		var host = await _provider.GetRequiredService<IHost>().ConfigureAwait(false);
+
+		var origin = new StateMachineOrigin(stateMachine);
+		
+		var controller = await host.StartStateMachineAsync(SessionId.New(), origin, default, SecurityContextType.NewStateMachine, token).ConfigureAwait(false);
+
+		return await controller.GetResult(token).ConfigureAwait(false);
+	}
 }
