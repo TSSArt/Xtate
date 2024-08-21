@@ -24,7 +24,7 @@ using Xtate.IoC;
 
 namespace Xtate;
 
-public class XtateApplication : IDisposable, IAsyncDisposable
+public class XtateApplication : IAsyncDisposable
 {
 	private readonly ServiceProvider _provider;
 
@@ -41,38 +41,69 @@ public class XtateApplication : IDisposable, IAsyncDisposable
 
 #endregion
 
-#region Interface IDisposable
-
-	public void Dispose() => _provider.Dispose();
-
-#endregion
-
 	public static XtateApplication Create() => new();
 
 	public StateMachineFluentBuilder CreateStateMachineBuilder() => _provider.GetRequiredServiceSync<StateMachineFluentBuilder>();
 
 	public async ValueTask Start()
 	{
-		var host = await _provider.GetRequiredService<IHost>().ConfigureAwait(false);
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		await host.StartHost().ConfigureAwait(false);
 	}
 	
 	public async ValueTask Stop()
 	{
-		var host = await _provider.GetRequiredService<IHost>().ConfigureAwait(false);
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		await host.StopHost().ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, CancellationToken token = default)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, CancellationToken token = default)
 	{
-		var host = await _provider.GetRequiredService<IHost>().ConfigureAwait(false);
+		/*
+		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
+
+		var serviceScope = serviceScopeFactory.CreateScope(services => services.AddConstant(stateMachine));
+
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		var origin = new StateMachineOrigin(stateMachine);
 		
-		var controller = await host.StartStateMachineAsync(SessionId.New(), origin, default, SecurityContextType.NewStateMachine, token).ConfigureAwait(false);
+		var controller = await host.StartStateMachine(SessionId.New(), origin, parameters, SecurityContextType.NoAccess, token).ConfigureAwait(false);
 
-		return await controller.GetResult(token).ConfigureAwait(false);
+		return await controller.GetResult(token).ConfigureAwait(false);*/
+
+		var module = new RuntimeStateMachineModule(stateMachine, arguments);
+
+		return await ExecuteStateMachine(module, token).ConfigureAwait(false);
 	}
+
+	public async ValueTask<DataModelValue> ExecuteStateMachine(StateMachineModule stateMachineModule, CancellationToken token)
+	{
+		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
+		var serviceScope = serviceScopeFactory.CreateScope(stateMachineModule.AddServices);
+
+		await using (serviceScope.ConfigureAwait(false))
+		{
+			var stateMachineController = await serviceScope.ServiceProvider.GetRequiredService<IStateMachineController>().ConfigureAwait(false);
+
+			await stateMachineController.StartAsync(token).ConfigureAwait(false);
+			return await stateMachineController.GetResult(token).ConfigureAwait(false);
+		}
+	}
+}
+
+public class RuntimeStateMachineModule(IStateMachine stateMachine, DataModelValue arguments) : StateMachineModule
+{
+	public override void AddServices(IServiceCollection services)
+	{
+		services.AddConstant(stateMachine);
+		services.AddConstant<IStateMachineArguments>(new StateMachineArguments(arguments));
+	}
+}
+
+public abstract class StateMachineModule
+{
+	public abstract void AddServices(IServiceCollection services);
 }
