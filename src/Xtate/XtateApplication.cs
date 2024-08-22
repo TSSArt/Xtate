@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Xtate.Builder;
 using Xtate.Core;
 using Xtate.IoC;
+using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate;
 
@@ -74,15 +75,15 @@ public class XtateApplication : IAsyncDisposable
 
 		return await controller.GetResult(token).ConfigureAwait(false);*/
 
-		var module = new RuntimeStateMachineModule(stateMachine, arguments);
+		var definition = new RuntimeStateMachine(stateMachine, arguments);
 
-		return await ExecuteStateMachine(module, token).ConfigureAwait(false);
+		return await ExecuteStateMachine(definition, token).ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(StateMachineModule stateMachineModule, CancellationToken token)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(StateMachineDefinition stateMachineDefinition, CancellationToken token)
 	{
 		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
-		var serviceScope = serviceScopeFactory.CreateScope(stateMachineModule.AddServices);
+		var serviceScope = serviceScopeFactory.CreateScope(stateMachineDefinition.AddServices);
 
 		await using (serviceScope.ConfigureAwait(false))
 		{
@@ -94,16 +95,18 @@ public class XtateApplication : IAsyncDisposable
 	}
 }
 
-public class RuntimeStateMachineModule(IStateMachine stateMachine, DataModelValue arguments) : StateMachineModule
+public class RuntimeStateMachine(IStateMachine stateMachine, DataModelValue arguments = default) : StateMachineDefinition, IStateMachineArguments
 {
 	public override void AddServices(IServiceCollection services)
 	{
 		services.AddConstant(stateMachine);
-		services.AddConstant<IStateMachineArguments>(new StateMachineArguments(arguments));
+		services.AddConstant<IStateMachineArguments>(this);
 	}
+
+	DataModelValue IStateMachineArguments.Arguments => arguments;
 }
 
-public abstract class StateMachineModule
+public abstract class StateMachineDefinition
 {
 	public abstract void AddServices(IServiceCollection services);
 }
