@@ -21,7 +21,8 @@ using System.Threading.Tasks;
 using Xtate.Builder;
 using Xtate.Core;
 using Xtate.IoC;
-using IServiceProvider = Xtate.IoC.IServiceProvider;
+
+//using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate;
 
@@ -33,12 +34,16 @@ public class XtateApplication : IAsyncDisposable
 	{
 		var services = new ServiceCollection();
 		services.AddModule<XtateModule>();
+
+		//services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(new StreamWriter(File.Create("C:\\tmp\\fff12.log"))));
+		services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(Console.Out));
+		services.AddTransientDecorator<IServiceProviderDebugger>((provider, debugger) => new ServiceProviderDebuggerLimit(50, debugger));
 		_provider = new ServiceProvider(services);
 	}
 
 #region Interface IAsyncDisposable
 
-	public  ValueTask DisposeAsync() => _provider.DisposeAsync();
+	public ValueTask DisposeAsync() => _provider.DisposeAsync();
 
 #endregion
 
@@ -52,7 +57,7 @@ public class XtateApplication : IAsyncDisposable
 
 		await host.StartHost().ConfigureAwait(false);
 	}
-	
+
 	public async ValueTask Stop()
 	{
 		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
@@ -60,7 +65,7 @@ public class XtateApplication : IAsyncDisposable
 		await host.StopHost().ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, CancellationToken token = default)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default)
 	{
 		/*
 		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
@@ -70,43 +75,35 @@ public class XtateApplication : IAsyncDisposable
 		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		var origin = new StateMachineOrigin(stateMachine);
-		
+
 		var controller = await host.StartStateMachine(SessionId.New(), origin, parameters, SecurityContextType.NoAccess, token).ConfigureAwait(false);
 
 		return await controller.GetResult(token).ConfigureAwait(false);*/
 
-		var definition = new RuntimeStateMachine(stateMachine, arguments);
+		var stateMachineClass = new RuntimeStateMachine(stateMachine) { Arguments = arguments };
 
-		return await ExecuteStateMachine(definition, token).ConfigureAwait(false);
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+
+		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(StateMachineDefinition stateMachineDefinition, CancellationToken token)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(StateMachineClass stateMachineClass, CancellationToken token)
 	{
 		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
-		var serviceScope = serviceScopeFactory.CreateScope(stateMachineDefinition.AddServices);
 
-		await using (serviceScope.ConfigureAwait(false))
+		var serviceScope = serviceScopeFactory.CreateScope(stateMachineClass.AddServices);
+		var registration = token.Register(scope => ((IDisposable) scope!).Dispose(), serviceScope);
+
+		try
 		{
 			var stateMachineController = await serviceScope.ServiceProvider.GetRequiredService<IStateMachineController>().ConfigureAwait(false);
 
-			await stateMachineController.StartAsync(token).ConfigureAwait(false);
-			return await stateMachineController.GetResult(token).ConfigureAwait(false);
+			return await stateMachineController.GetResult().ConfigureAwait(false);
+		}
+		finally
+		{
+			registration.Dispose();
+			await serviceScope.DisposeAsync().ConfigureAwait(false);
 		}
 	}
-}
-
-public class RuntimeStateMachine(IStateMachine stateMachine, DataModelValue arguments = default) : StateMachineDefinition, IStateMachineArguments
-{
-	public override void AddServices(IServiceCollection services)
-	{
-		services.AddConstant(stateMachine);
-		services.AddConstant<IStateMachineArguments>(this);
-	}
-
-	DataModelValue IStateMachineArguments.Arguments => arguments;
-}
-
-public abstract class StateMachineDefinition
-{
-	public abstract void AddServices(IServiceCollection services);
 }
