@@ -16,8 +16,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Data.SqlTypes;
 using System.Threading;
 using System.Threading.Tasks;
+using Jint.Parser;
 using Xtate.Builder;
 using Xtate.Core;
 using Xtate.IoC;
@@ -65,45 +67,57 @@ public class XtateApplication : IAsyncDisposable
 		await host.StopHost().ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
 	{
-		/*
-		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
-
-		var serviceScope = serviceScopeFactory.CreateScope(services => services.AddConstant(stateMachine));
-
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
-
-		var origin = new StateMachineOrigin(stateMachine);
-
-		var controller = await host.StartStateMachine(SessionId.New(), origin, parameters, SecurityContextType.NoAccess, token).ConfigureAwait(false);
-
-		return await controller.GetResult(token).ConfigureAwait(false);*/
-
-		var stateMachineClass = new RuntimeStateMachine(stateMachine) { Arguments = arguments };
+		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
 		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(StateMachineClass stateMachineClass, CancellationToken token)
+	public async ValueTask StartStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
 	{
-		var serviceScopeFactory = _provider.GetRequiredServiceSync<IServiceScopeFactory>();
+		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		var serviceScope = serviceScopeFactory.CreateScope(stateMachineClass.AddServices);
-		var registration = token.Register(scope => ((IDisposable) scope!).Dispose(), serviceScope);
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
-		try
-		{
-			var stateMachineController = await serviceScope.ServiceProvider.GetRequiredService<IStateMachineController>().ConfigureAwait(false);
+		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+	}
 
-			return await stateMachineController.GetResult().ConfigureAwait(false);
-		}
-		finally
-		{
-			registration.Dispose();
-			await serviceScope.DisposeAsync().ConfigureAwait(false);
-		}
+	public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
+	{
+		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
+
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+
+		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+	}
+
+	public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
+	{
+		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
+
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+
+		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+	}
+	
+	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
+	{
+		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+
+		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+	}
+
+	public async ValueTask StartStateMachine(string scxml, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
+	{
+		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+
+		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+
+		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 }
