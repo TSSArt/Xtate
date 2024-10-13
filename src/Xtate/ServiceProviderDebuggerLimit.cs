@@ -3,30 +3,32 @@ using Xtate.IoC;
 
 namespace Xtate;
 
-public class ServiceProviderDebuggerLimit(int limit, IServiceProviderDebugger? next) : IServiceProviderDebugger
+public class ServiceProviderDebuggerLimit(int limit, IServiceProviderActions next) : IServiceProviderActions
 {
 	private int _level;
+	
+	public IServiceProviderDataActions? RegisterServices() => next.RegisterServices();
 
-	public void RegisterService(ServiceEntry serviceEntry) => next?.RegisterService(serviceEntry);
+	public IServiceProviderDataActions? ServiceRequesting(TypeKey typeKey) => next.ServiceRequesting(typeKey);
 
-	public void BeforeFactory(TypeKey serviceKey)
+	public IServiceProviderDataActions? ServiceRequested(TypeKey typeKey) => next.ServiceRequested(typeKey);
+
+	public IServiceProviderDataActions? FactoryCalling(TypeKey typeKey)
 	{
-		_level ++;
+		_level++;
 
 		if (_level >= limit)
 		{
 			throw new InvalidOperationException();
 		}
 
-		next?.BeforeFactory(serviceKey);
+		return next.FactoryCalling(typeKey);
 	}
 
-	public void AfterFactory(TypeKey serviceKey)
+	public IServiceProviderDataActions? FactoryCalled(TypeKey typeKey)
 	{
-		_level --;
+		_level--;
 
-		next?.AfterFactory(serviceKey);
+		return next.FactoryCalled(typeKey);
 	}
-
-	public void FactoryCalled(TypeKey serviceKey) => next?.FactoryCalled(serviceKey);
 }

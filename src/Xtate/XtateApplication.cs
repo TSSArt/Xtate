@@ -16,40 +16,79 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Data.SqlTypes;
-using System.Threading;
+using System.Diagnostics;
 using System.Threading.Tasks;
-using Jint.Parser;
 using Xtate.Builder;
 using Xtate.Core;
 using Xtate.IoC;
-
-//using IServiceProvider = Xtate.IoC.IServiceProvider;
+using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate;
 
+public class XtateApplicationBuilder
+{
+	private class TraceLogModule : Module
+	{
+		protected override void AddServices()
+		{
+			Services.AddImplementation<TraceLogWriter<Any>>().For<ILogWriter<Any>>();
+		}
+	}
+
+	private class ConsoleLogModule : Module<TraceLogModule>
+	{
+		protected override void AddServices()
+		{
+			Services.AddForwarding<TraceListener>(_ => new TextWriterTraceListener(Console.Out));
+		}
+	}
+
+	private readonly ServiceCollection _services = [];
+
+	public XtateApplicationBuilder()
+	{
+		_services.AddModule<XtateModule>();
+		//services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(new StreamWriter(File.Create("C:\\tmp\\fff12.log"))));
+		//services.AddTransient<IServiceProviderActions>((provider) => new ServiceProviderDebugger(Console.Out));
+		//services.AddTransientDecorator<IServiceProviderActions>((provider, debugger) => new ServiceProviderDebuggerLimit(50, debugger));
+
+	}
+
+	public XtateApplicationBuilder AddServices(Action<IServiceCollection> addServices)
+	{
+		addServices(_services);
+
+		return this;
+	}
+
+	public XtateApplicationBuilder LogToConsole()
+	{
+		_services.AddModule<ConsoleLogModule>();
+
+		return this;
+	}
+
+	public XtateApplication Build()
+	{
+		return new XtateApplication(_services.BuildProvider());
+	}
+}
+
 public class XtateApplication : IAsyncDisposable
 {
-	private readonly ServiceProvider _provider;
+	private readonly IServiceProvider _provider;
 
-	public XtateApplication()
-	{
-		var services = new ServiceCollection();
-		services.AddModule<XtateModule>();
-
-		//services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(new StreamWriter(File.Create("C:\\tmp\\fff12.log"))));
-		services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(Console.Out));
-		services.AddTransientDecorator<IServiceProviderDebugger>((provider, debugger) => new ServiceProviderDebuggerLimit(50, debugger));
-		_provider = new ServiceProvider(services);
-	}
+	internal XtateApplication(IServiceProvider provider) => _provider = provider;
 
 #region Interface IAsyncDisposable
 
-	public ValueTask DisposeAsync() => _provider.DisposeAsync();
+	public ValueTask DisposeAsync() => Disposer.DisposeAsync(_provider);
 
 #endregion
 
-	public static XtateApplication Create() => new();
+	public static XtateApplication Create() => CreateBuilder().Build();
+
+	public static XtateApplicationBuilder CreateBuilder() => new();
 
 	public StateMachineFluentBuilder CreateStateMachineBuilder() => _provider.GetRequiredServiceSync<StateMachineFluentBuilder>();
 

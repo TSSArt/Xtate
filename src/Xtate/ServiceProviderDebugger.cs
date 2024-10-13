@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,7 @@ using Xtate.IoC;
 
 namespace Xtate;
 
-public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderDebugger
+public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderActions, IServiceProviderDataActions
 {
 	private readonly ConcurrentDictionary<TypeKey, Stat> _stats = new();
 	private          bool                                _factoryCalled;
@@ -23,7 +24,17 @@ public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderDebugg
 		writer.WriteLine($"REG: {serviceEntry.InstanceScope,-10} - {serviceEntry.Key}");
 	}
 
-	public void BeforeFactory(TypeKey serviceKey)
+	public IServiceProviderDataActions RegisterServices() => this;
+
+	public void ServiceRequesting<T, TArg>(TArg argument) => throw new NotSupportedException();
+
+	public void ServiceRequested<T, TArg>(T? instance) => throw new NotSupportedException();
+
+	public void FactoryCalling<T, TArg>(TArg argument) => throw new NotSupportedException();
+
+	public void FactoryCalled<T, TArg>(T? instance) => throw new NotSupportedException();
+
+	public IServiceProviderDataActions? ServiceRequesting(TypeKey serviceKey)
 	{
 		GetStat(serviceKey).BeforeFactory();
 
@@ -40,9 +51,11 @@ public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderDebugg
 		_level ++;
 
 		_noFactory = true;
+
+		return default;
 	}
 
-	public void FactoryCalled(TypeKey serviceKey)
+	public IServiceProviderDataActions? FactoryCalling(TypeKey serviceKey)
 	{
 		var stat = GetStat(serviceKey);
 		stat.FactoryCalled();
@@ -50,9 +63,13 @@ public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderDebugg
 		writer.Write($" {{ #{stat.InstancesCreated} ");
 		_factoryCalled = true;
 		_noFactory = false;
+
+		return default;
 	}
 
-	public void AfterFactory(TypeKey serviceKey)
+	public IServiceProviderDataActions? FactoryCalled(TypeKey typeKey) => default;
+
+	public IServiceProviderDataActions? ServiceRequested(TypeKey serviceKey)
 	{
 		_level --;
 
@@ -77,6 +94,8 @@ public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderDebugg
 		_noFactory = false;
 
 		GetStat(serviceKey).AfterFactory();
+
+		return default;
 	}
 
 #endregion
