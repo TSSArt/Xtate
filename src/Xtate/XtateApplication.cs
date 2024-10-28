@@ -68,21 +68,18 @@ public class XtateApplicationBuilder
 		return this;
 	}
 
-	public XtateApplication Build()
-	{
-		return new XtateApplication(_services.BuildProvider());
-	}
+	public XtateApplication Build() => new(_services.BuildProvider());
 }
 
 public class XtateApplication : IAsyncDisposable
 {
-	private readonly IServiceProvider _provider;
+	private readonly IServiceProvider _serviceProvider;
 
-	internal XtateApplication(IServiceProvider provider) => _provider = provider;
+	internal XtateApplication(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
 #region Interface IAsyncDisposable
 
-	public ValueTask DisposeAsync() => Disposer.DisposeAsync(_provider);
+	public ValueTask DisposeAsync() => Disposer.DisposeAsync(_serviceProvider);
 
 #endregion
 
@@ -90,72 +87,74 @@ public class XtateApplication : IAsyncDisposable
 
 	public static XtateApplicationBuilder CreateBuilder() => new();
 
-	public StateMachineFluentBuilder CreateStateMachineBuilder() => _provider.GetRequiredServiceSync<StateMachineFluentBuilder>();
+	public StateMachineFluentBuilder CreateStateMachineBuilder() => _serviceProvider.GetRequiredServiceSync<StateMachineFluentBuilder>();
 
 	public async ValueTask Start()
 	{
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		await host.StartHost().ConfigureAwait(false);
 	}
 
 	public async ValueTask Stop()
 	{
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
 		await host.StopHost().ConfigureAwait(false);
 	}
 
+	private ValueTask<IHostController> GetHostController() => _serviceProvider.GetRequiredService<IHostController>();
+
 	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
 	{
-		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+		var host = await GetHostController().ConfigureAwait(false);
 
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
 		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask StartStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
 	{
-		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+		var host = await GetHostController().ConfigureAwait(false);
 
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
 		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
 	{
-		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
+		var host = await GetHostController().ConfigureAwait(false);
 
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
 
 		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
 	{
-		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
+		var host = await GetHostController().ConfigureAwait(false);
 
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
 
 		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 	
 	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
 	{
-		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+		var host = await GetHostController().ConfigureAwait(false);
 
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
 		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask StartStateMachine(string scxml, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
 	{
-		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+		var host = await GetHostController().ConfigureAwait(false);
 
-		var host = await _provider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
 		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
