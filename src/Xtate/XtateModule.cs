@@ -29,17 +29,4 @@ public class XtateModule : Module
 		Services.AddModule<EcmaScriptDataModelHandlerModule>();
 		Services.AddModule<StateMachineFluentBuilderModule>();
 	}
-
-	//TODO:delete
-	/*
-	public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-			builder
-					.AddXPath()
-					.AddEcmaScript()
-					.AddHttpClient()
-					.AddSmtpClient()
-					.AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
-					.AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
-					.AddResourceLoaderFactory(WebResourceLoaderFactory.Instance);
-	*/
 }
