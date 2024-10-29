@@ -1,4 +1,21 @@
-﻿using System;
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -10,29 +27,18 @@ namespace Xtate;
 public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderActions, IServiceProviderDataActions
 {
 	private readonly ConcurrentDictionary<TypeKey, Stat> _stats = new();
-	private          bool                                _factoryCalled;
-	private          int                                 _level = 1;
-	private          bool                                _noFactory;
-	private          int                                 _prevLevel;
 
-#region Interface IServiceProviderDebugger
+	private bool _factoryCalled;
 
-	public void RegisterService(ServiceEntry serviceEntry)
-	{
-		GetStat(serviceEntry.Key).RegisterService(serviceEntry);
+	private int _level = 1;
 
-		writer.WriteLine($"REG: {serviceEntry.InstanceScope,-10} - {serviceEntry.Key}");
-	}
+	private bool _noFactory;
+
+	private int _prevLevel;
+
+#region Interface IServiceProviderActions
 
 	public IServiceProviderDataActions RegisterServices() => this;
-
-	public void ServiceRequesting<T, TArg>(TArg argument) => throw new NotSupportedException();
-
-	public void ServiceRequested<T, TArg>(T? instance) => throw new NotSupportedException();
-
-	public void FactoryCalling<T, TArg>(TArg argument) => throw new NotSupportedException();
-
-	public void FactoryCalled<T, TArg>(T? instance) => throw new NotSupportedException();
 
 	public IServiceProviderDataActions? ServiceRequesting(TypeKey serviceKey)
 	{
@@ -100,6 +106,25 @@ public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderAction
 
 #endregion
 
+#region Interface IServiceProviderDataActions
+
+	public void RegisterService(ServiceEntry serviceEntry)
+	{
+		GetStat(serviceEntry.Key).RegisterService(serviceEntry);
+
+		writer.WriteLine($"REG: {serviceEntry.InstanceScope,-10} - {serviceEntry.Key}");
+	}
+
+	public void ServiceRequesting<T, TArg>(TArg argument) => throw new NotSupportedException();
+
+	public void ServiceRequested<T, TArg>(T? instance) => throw new NotSupportedException();
+
+	public void FactoryCalling<T, TArg>(TArg argument) => throw new NotSupportedException();
+
+	public void FactoryCalled<T, TArg>(T? instance) => throw new NotSupportedException();
+
+#endregion
+
 	private void WriteIdent()
 	{
 		var padding = false;
@@ -142,9 +167,11 @@ public class ServiceProviderDebugger(TextWriter writer) : IServiceProviderAction
 	{
 		private int _deepLevel;
 
-		public List<ServiceEntry> Registrations    { get; } = [];
-		public TypeKey            TypeKey          { get; } = key;
-		public int                InstancesCreated { get; private set; }
+		public List<ServiceEntry> Registrations { get; } = [];
+
+		public TypeKey TypeKey { get; } = key;
+
+		public int InstancesCreated { get; private set; }
 
 		public void BeforeFactory()
 		{

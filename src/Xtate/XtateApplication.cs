@@ -27,31 +27,15 @@ namespace Xtate;
 
 public class XtateApplicationBuilder
 {
-	private class TraceLogModule : Module
-	{
-		protected override void AddServices()
-		{
-			Services.AddImplementation<TraceLogWriter<Any>>().For<ILogWriter<Any>>();
-		}
-	}
-
-	private class ConsoleLogModule : Module<TraceLogModule>
-	{
-		protected override void AddServices()
-		{
-			Services.AddForwarding<TraceListener>(_ => new TextWriterTraceListener(Console.Out));
-		}
-	}
-
 	private readonly ServiceCollection _services = [];
 
 	public XtateApplicationBuilder()
 	{
 		_services.AddModule<XtateModule>();
+
 		//services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(new StreamWriter(File.Create("C:\\tmp\\fff12.log"))));
 		//services.AddTransient<IServiceProviderActions>((provider) => new ServiceProviderDebugger(Console.Out));
 		//services.AddTransientDecorator<IServiceProviderActions>((provider, debugger) => new ServiceProviderDebuggerLimit(50, debugger));
-
 	}
 
 	public XtateApplicationBuilder AddServices(Action<IServiceCollection> addServices)
@@ -69,6 +53,22 @@ public class XtateApplicationBuilder
 	}
 
 	public XtateApplication Build() => new(_services.BuildProvider());
+
+	private class TraceLogModule : Module
+	{
+		protected override void AddServices()
+		{
+			Services.AddImplementation<TraceLogWriter<Any>>().For<ILogWriter<Any>>();
+		}
+	}
+
+	private class ConsoleLogModule : Module<TraceLogModule>
+	{
+		protected override void AddServices()
+		{
+			Services.AddForwarding<TraceListener>(_ => new TextWriterTraceListener(Console.Out));
+		}
+	}
 }
 
 public class XtateApplication : IAsyncDisposable
@@ -105,7 +105,10 @@ public class XtateApplication : IAsyncDisposable
 
 	private ValueTask<IHostController> GetHostController() => _serviceProvider.GetRequiredService<IHostController>();
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine,
+															   DataModelValue arguments = default,
+															   SessionId? sessionId = default,
+															   Uri? location = default)
 	{
 		var host = await GetHostController().ConfigureAwait(false);
 
@@ -114,7 +117,10 @@ public class XtateApplication : IAsyncDisposable
 		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
-	public async ValueTask StartStateMachine(IStateMachine stateMachine, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
+	public async ValueTask StartStateMachine(IStateMachine stateMachine,
+											 DataModelValue arguments = default,
+											 SessionId? sessionId = default,
+											 Uri? location = default)
 	{
 		var host = await GetHostController().ConfigureAwait(false);
 
@@ -140,8 +146,11 @@ public class XtateApplication : IAsyncDisposable
 
 		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
-	
-	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
+
+	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml,
+															   DataModelValue arguments = default,
+															   SessionId? sessionId = default,
+															   Uri? location = default)
 	{
 		var host = await GetHostController().ConfigureAwait(false);
 
@@ -150,7 +159,10 @@ public class XtateApplication : IAsyncDisposable
 		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
-	public async ValueTask StartStateMachine(string scxml, DataModelValue arguments = default, SessionId? sessionId = default, Uri? location = default)
+	public async ValueTask StartStateMachine(string scxml,
+											 DataModelValue arguments = default,
+											 SessionId? sessionId = default,
+											 Uri? location = default)
 	{
 		var host = await GetHostController().ConfigureAwait(false);
 
