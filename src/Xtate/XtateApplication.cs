@@ -103,18 +103,18 @@ public class XtateApplication : IAsyncDisposable
 		await host.StopHost().ConfigureAwait(false);
 	}
 
-	private ValueTask<IHostController> GetHostController() => _serviceProvider.GetRequiredService<IHostController>();
+	private ValueTask<IStateMachineScopeManager> GetStateMachineScopeManager() => _serviceProvider.GetRequiredService<IStateMachineScopeManager>();
 
 	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine,
 															   DataModelValue arguments = default,
 															   SessionId? sessionId = default,
 															   Uri? location = default)
 	{
-		var host = await GetHostController().ConfigureAwait(false);
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
 		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+		return await stateMachineScopeManager.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask StartStateMachine(IStateMachine stateMachine,
@@ -122,29 +122,29 @@ public class XtateApplication : IAsyncDisposable
 											 SessionId? sessionId = default,
 											 Uri? location = default)
 	{
-		var host = await GetHostController().ConfigureAwait(false);
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
 		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+		await stateMachineScopeManager.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
 	{
-		var host = await GetHostController().ConfigureAwait(false);
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
 		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
 
-		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+		return await stateMachineScopeManager.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
 	{
-		var host = await GetHostController().ConfigureAwait(false);
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
 		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
 
-		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+		await stateMachineScopeManager.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml,
@@ -152,11 +152,11 @@ public class XtateApplication : IAsyncDisposable
 															   SessionId? sessionId = default,
 															   Uri? location = default)
 	{
-		var host = await GetHostController().ConfigureAwait(false);
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
 		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		return await host.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+		return await stateMachineScopeManager.ExecuteStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
 	public async ValueTask StartStateMachine(string scxml,
@@ -164,10 +164,10 @@ public class XtateApplication : IAsyncDisposable
 											 SessionId? sessionId = default,
 											 Uri? location = default)
 	{
-		var host = await GetHostController().ConfigureAwait(false);
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
 		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		await host.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+		await stateMachineScopeManager.StartStateMachine(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 }
