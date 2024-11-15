@@ -21,12 +21,7 @@ using Xtate.IoC;
 
 namespace Xtate;
 
-public class XtateModule : Module
+public class XtateModule : Module<StateMachineProcessorModule, EcmaScriptDataModelHandlerModule, StateMachineFluentBuilderModule>
 {
-	protected override void AddServices()
-	{
-		Services.AddModule<StateMachineHostModule>();
-		Services.AddModule<EcmaScriptDataModelHandlerModule>();
-		Services.AddModule<StateMachineFluentBuilderModule>();
-	}
+	protected override void AddServices() { }
 }

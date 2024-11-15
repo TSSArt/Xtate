@@ -91,16 +91,16 @@ public class XtateApplication : IAsyncDisposable
 
 	public async ValueTask Start()
 	{
-		var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		//var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
-		await host.StartHost().ConfigureAwait(false);
+		//await host.StartHost().ConfigureAwait(false);
 	}
 
 	public async ValueTask Stop()
 	{
-		var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
+		//var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
-		await host.StopHost().ConfigureAwait(false);
+		//await host.StopHost().ConfigureAwait(false);
 	}
 
 	private ValueTask<IStateMachineScopeManager> GetStateMachineScopeManager() => _serviceProvider.GetRequiredService<IStateMachineScopeManager>();
