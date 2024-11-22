@@ -16,40 +16,30 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics;
+using Xtate.Core;
 using Xtate.IoC;
 
 namespace Xtate;
 
-public class ServiceProviderDebuggerLimit(int limit, IServiceProviderActions next) : IServiceProviderActions
+public class DebugTraceModule : Module
 {
-	private int _level;
-
-#region Interface IServiceProviderActions
-
-	public IServiceProviderDataActions? RegisterServices() => next.RegisterServices();
-
-	public IServiceProviderDataActions? ServiceRequesting(TypeKey typeKey) => next.ServiceRequesting(typeKey);
-
-	public IServiceProviderDataActions? ServiceRequested(TypeKey typeKey) => next.ServiceRequested(typeKey);
-
-	public IServiceProviderDataActions? FactoryCalling(TypeKey typeKey)
+	protected override void AddServices()
 	{
-		_level ++;
-
-		if (_level >= limit)
-		{
-			throw new InvalidOperationException();
-		}
-
-		return next.FactoryCalling(typeKey);
+		AddTraceServices();
+		AddDebugServices();
 	}
 
-	public IServiceProviderDataActions? FactoryCalled(TypeKey typeKey)
+	[Conditional("DEBUG")]
+	private void AddDebugServices()
 	{
-		_level --;
-
-		return next.FactoryCalled(typeKey);
+		Services.AddShared<IServiceProviderActions>(SharedWithin.Container, _ => new ServiceProviderDebugger(Console.Out));
 	}
 
-#endregion
+	[Conditional("TRACE")]
+	private void AddTraceServices()
+	{
+		Services.AddImplementation<TraceLogWriter<Any>>().For<ILogWriter<Any>>();
+		Services.AddTransient<TraceListener>(_ => new TextWriterTraceListener(Console.Out));
+	}
 }

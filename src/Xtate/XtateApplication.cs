@@ -17,6 +17,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Xtate.Builder;
 using Xtate.Core;
@@ -32,10 +33,7 @@ public class XtateApplicationBuilder
 	public XtateApplicationBuilder()
 	{
 		_services.AddModule<XtateModule>();
-
-		//services.AddTransient<IServiceProviderDebugger>((provider) => new ServiceProviderDebugger(new StreamWriter(File.Create("C:\\tmp\\fff12.log"))));
-		//services.AddTransient<IServiceProviderActions>((provider) => new ServiceProviderDebugger(Console.Out));
-		//services.AddTransientDecorator<IServiceProviderActions>((provider, debugger) => new ServiceProviderDebuggerLimit(50, debugger));
+		_services.AddModule<DebugTraceModule>();
 	}
 
 	public XtateApplicationBuilder AddServices(Action<IServiceCollection> addServices)
@@ -45,30 +43,7 @@ public class XtateApplicationBuilder
 		return this;
 	}
 
-	public XtateApplicationBuilder LogToConsole()
-	{
-		_services.AddModule<ConsoleLogModule>();
-
-		return this;
-	}
-
 	public XtateApplication Build() => new(_services.BuildProvider());
-
-	private class TraceLogModule : Module
-	{
-		protected override void AddServices()
-		{
-			Services.AddImplementation<TraceLogWriter<Any>>().For<ILogWriter<Any>>();
-		}
-	}
-
-	private class ConsoleLogModule : Module<TraceLogModule>
-	{
-		protected override void AddServices()
-		{
-			Services.AddForwarding<TraceListener>(_ => new TextWriterTraceListener(Console.Out));
-		}
-	}
 }
 
 public class XtateApplication : IAsyncDisposable
@@ -79,7 +54,7 @@ public class XtateApplication : IAsyncDisposable
 
 #region Interface IAsyncDisposable
 
-	public ValueTask DisposeAsync() => Disposer.DisposeAsync(_serviceProvider);
+	public async ValueTask DisposeAsync() => await Disposer.DisposeAsync(_serviceProvider).ConfigureAwait(false);
 
 #endregion
 
