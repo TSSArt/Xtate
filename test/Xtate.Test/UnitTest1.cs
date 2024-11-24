@@ -34,6 +34,7 @@ public class UnitTest1
 
 		// Act
 		serviceCollection.AddModule<XtateModule>();
+		serviceCollection.AddModule<DebugTraceModule>();
 		serviceCollection.BuildProvider();
 
 		// Assert
