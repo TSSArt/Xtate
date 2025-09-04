@@ -1,4 +1,4 @@
-﻿// Copyright © 2019-2024 Sergii Artemenko
+﻿// Copyright © 2019-2025 Sergii Artemenko
 // 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -26,121 +26,121 @@ namespace Xtate;
 
 public class XtateApplicationBuilder
 {
-	private readonly ServiceCollection _services = [];
+    private readonly ServiceCollection _services = [];
 
-	public XtateApplicationBuilder()
-	{
-		_services.AddModule<XtateModule>();
-		_services.AddModule<DebugTraceModule>();
-	}
+    public XtateApplicationBuilder()
+    {
+        _services.AddModule<XtateModule>();
+        _services.AddModule<DebugTraceModule>();
+    }
 
-	public XtateApplicationBuilder AddServices(Action<IServiceCollection> addServices)
-	{
-		addServices(_services);
+    public XtateApplicationBuilder AddServices(Action<IServiceCollection> addServices)
+    {
+        addServices(_services);
 
-		return this;
-	}
+        return this;
+    }
 
-	public XtateApplication Build() => new(_services.BuildProvider());
+    public XtateApplication Build() => new(_services.BuildProvider());
 }
 
 public class XtateApplication : IAsyncDisposable
 {
-	private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProvider _serviceProvider;
 
-	internal XtateApplication(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+    internal XtateApplication(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
 #region Interface IAsyncDisposable
 
-	public async ValueTask DisposeAsync() => await Disposer.DisposeAsync(_serviceProvider).ConfigureAwait(false);
+    public async ValueTask DisposeAsync() => await Disposer.DisposeAsync(_serviceProvider).ConfigureAwait(false);
 
 #endregion
 
-	public static XtateApplication Create() => CreateBuilder().Build();
+    public static XtateApplication Create() => CreateBuilder().Build();
 
-	public static XtateApplicationBuilder CreateBuilder() => new();
+    public static XtateApplicationBuilder CreateBuilder() => new();
 
-	public StateMachineFluentBuilder CreateStateMachineBuilder() => _serviceProvider.GetRequiredServiceSync<StateMachineFluentBuilder>();
+    public StateMachineFluentBuilder CreateStateMachineBuilder() => _serviceProvider.GetRequiredServiceSync<StateMachineFluentBuilder>();
 
-	public async ValueTask Start()
-	{
-		//var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
+    public async ValueTask Start()
+    {
+        //var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
-		//await host.StartHost().ConfigureAwait(false);
-	}
+        //await host.StartHost().ConfigureAwait(false);
+    }
 
-	public async ValueTask Stop()
-	{
-		//var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
+    public async ValueTask Stop()
+    {
+        //var host = await _serviceProvider.GetRequiredService<IHostController>().ConfigureAwait(false);
 
-		//await host.StopHost().ConfigureAwait(false);
-	}
+        //await host.StopHost().ConfigureAwait(false);
+    }
 
-	private ValueTask<IStateMachineScopeManager> GetStateMachineScopeManager() => _serviceProvider.GetRequiredService<IStateMachineScopeManager>();
+    private ValueTask<IStateMachineScopeManager> GetStateMachineScopeManager() => _serviceProvider.GetRequiredService<IStateMachineScopeManager>();
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine,
-															   DataModelValue arguments = default,
-															   SessionId? sessionId = null,
-															   Uri? location = null)
-	{
-		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+    public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine,
+                                                               DataModelValue arguments = default,
+                                                               SessionId? sessionId = null,
+                                                               Uri? location = null)
+    {
+        var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
-		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+        var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
-	}
+        return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+    }
 
-	public async ValueTask StartStateMachine(IStateMachine stateMachine,
-											 DataModelValue arguments = default,
-											 SessionId? sessionId = null,
-											 Uri? location = null)
-	{
-		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+    public async ValueTask StartStateMachine(IStateMachine stateMachine,
+                                             DataModelValue arguments = default,
+                                             SessionId? sessionId = null,
+                                             Uri? location = null)
+    {
+        var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
-		var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+        var stateMachineClass = new RuntimeStateMachine(stateMachine) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
-	}
+        await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+    }
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = null)
-	{
-		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+    public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = null)
+    {
+        var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
-		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
+        var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
 
-		return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
-	}
+        return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+    }
 
-	public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = null)
-	{
-		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+    public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = null)
+    {
+        var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
-		var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
+        var stateMachineClass = new LocationStateMachine(location) { SessionId = sessionId!, Arguments = arguments };
 
-		await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
-	}
+        await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+    }
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml,
-															   DataModelValue arguments = default,
-															   SessionId? sessionId = null,
-															   Uri? location = null)
-	{
-		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+    public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml,
+                                                               DataModelValue arguments = default,
+                                                               SessionId? sessionId = null,
+                                                               Uri? location = null)
+    {
+        var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
-		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+        var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
-	}
+        return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+    }
 
-	public async ValueTask StartStateMachine(string scxml,
-											 DataModelValue arguments = default,
-											 SessionId? sessionId = null,
-											 Uri? location = null)
-	{
-		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+    public async ValueTask StartStateMachine(string scxml,
+                                             DataModelValue arguments = default,
+                                             SessionId? sessionId = null,
+                                             Uri? location = null)
+    {
+        var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
-		var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
+        var stateMachineClass = new ScxmlStringStateMachine(scxml) { SessionId = sessionId!, Location = location!, Arguments = arguments };
 
-		await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
-	}
+        await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
+    }
 }
