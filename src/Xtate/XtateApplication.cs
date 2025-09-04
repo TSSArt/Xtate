@@ -80,8 +80,8 @@ public class XtateApplication : IAsyncDisposable
 
 	public async ValueTask<DataModelValue> ExecuteStateMachine(IStateMachine stateMachine,
 															   DataModelValue arguments = default,
-															   SessionId? sessionId = default,
-															   Uri? location = default)
+															   SessionId? sessionId = null,
+															   Uri? location = null)
 	{
 		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
@@ -92,8 +92,8 @@ public class XtateApplication : IAsyncDisposable
 
 	public async ValueTask StartStateMachine(IStateMachine stateMachine,
 											 DataModelValue arguments = default,
-											 SessionId? sessionId = default,
-											 Uri? location = default)
+											 SessionId? sessionId = null,
+											 Uri? location = null)
 	{
 		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
@@ -102,7 +102,7 @@ public class XtateApplication : IAsyncDisposable
 		await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
-	public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
+	public async ValueTask<DataModelValue> ExecuteStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = null)
 	{
 		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
@@ -111,7 +111,7 @@ public class XtateApplication : IAsyncDisposable
 		return await stateMachineScopeManager.Execute(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
 	}
 
-	public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = default)
+	public async ValueTask StartStateMachine(Uri location, DataModelValue arguments = default, SessionId? sessionId = null)
 	{
 		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
@@ -122,8 +122,8 @@ public class XtateApplication : IAsyncDisposable
 
 	public async ValueTask<DataModelValue> ExecuteStateMachine(string scxml,
 															   DataModelValue arguments = default,
-															   SessionId? sessionId = default,
-															   Uri? location = default)
+															   SessionId? sessionId = null,
+															   Uri? location = null)
 	{
 		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
@@ -134,8 +134,8 @@ public class XtateApplication : IAsyncDisposable
 
 	public async ValueTask StartStateMachine(string scxml,
 											 DataModelValue arguments = default,
-											 SessionId? sessionId = default,
-											 Uri? location = default)
+											 SessionId? sessionId = null,
+											 Uri? location = null)
 	{
 		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
 
