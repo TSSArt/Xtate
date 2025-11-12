@@ -24,14 +24,20 @@ using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate;
 
+public class XtateApplicationOptions
+{
+	//public bool EnableIocDebug { get; set; } = false;
+}
+
 public class XtateApplicationBuilder
 {
     private readonly ServiceCollection _services = [];
 
+    private readonly XtateApplicationOptions _options = new();
+
     public XtateApplicationBuilder()
     {
         _services.AddModule<XtateModule>();
-        _services.AddModule<DebugTraceModule>();
     }
 
     public XtateApplicationBuilder AddServices(Action<IServiceCollection> addServices)
@@ -41,7 +47,36 @@ public class XtateApplicationBuilder
         return this;
     }
 
-    public XtateApplication Build() => new(_services.BuildProvider());
+    public XtateApplicationBuilder AddModule<TModule>() where TModule : IModule, new()
+    {
+        _services.AddModule<TModule>();
+
+        return this;
+    }
+
+    public XtateApplicationBuilder Configure<TOptions>(Action<TOptions> setOptions)
+    {
+        _services.Configure(setOptions);
+
+        return this;
+    }
+
+	public XtateApplicationBuilder SetOptions(Action<XtateApplicationOptions> setOptions)
+    {
+        setOptions(_options);
+
+        return this;
+    }
+
+    public XtateApplication Build()
+    {
+       /* if (_options.EnableIocDebug)
+        {
+            _services.AddModule<IocDebugModule>();
+        }*/
+
+        return new XtateApplication(_services.BuildProvider());
+    }
 }
 
 public class XtateApplication : IAsyncDisposable
@@ -143,4 +178,11 @@ public class XtateApplication : IAsyncDisposable
 
         await stateMachineScopeManager.Start(stateMachineClass, SecurityContextType.NewStateMachine).ConfigureAwait(false);
     }
+
+	public async ValueTask DestroyStateMachine(SessionId sessionId)
+	{
+		var stateMachineScopeManager = await GetStateMachineScopeManager().ConfigureAwait(false);
+
+		await stateMachineScopeManager.Destroy(sessionId).ConfigureAwait(false);
+	}
 }

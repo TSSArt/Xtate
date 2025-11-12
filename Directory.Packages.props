@@ -1,0 +1,23 @@
+<Project>
+
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageVersion Include="Xtate.IoC" Version="0.*" />
+		<PackageVersion Include="Xtate.Core" Version="0.*" />
+		<PackageVersion Include="Xtate.DataModel.EcmaScript" Version="0.*" />
+		<PackageVersion Include="Xtate.Logger.Serilog" Version="0.*" />
+		<PackageVersion Include="Xtate.IoProcessor.Http" Version="0.*" />
+		<PackageVersion Include="Xtate.Service.HttpClient" Version="0.*" />
+		<PackageVersion Include="Xtate.Service.SmtpClient" Version="0.*" />
+
+		<PackageVersion Include="System.Threading.Channels" Version="10.0.0" />
+		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.6" />
+		<PackageVersion Include="Serilog.Sinks.Graylog" Version="3.1.1" />
+	</ItemGroup>
+
+</Project>
+

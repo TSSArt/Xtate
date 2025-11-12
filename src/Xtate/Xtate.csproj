@@ -9,8 +9,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Xtate.SharedContent" Version="0.*" />
-		<PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.0.0.1" PrivateAssets="all" />
+		<PackageReference Include="Xtate.SharedContent" PrivateAssets="all" />
+		<PackageReference Include="ConfigureAwaitChecker.Analyzer" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(UseProjectReference)'=='true'">
@@ -24,13 +24,13 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(UseProjectReference)'==''">
-		<PackageReference Include="Xtate.IoC" Version="0.*" />
-		<PackageReference Include="Xtate.Core" Version="0.*" />
-		<PackageReference Include="Xtate.DataModel.EcmaScript" Version="0.*" />
-		<PackageReference Include="Xtate.Logger.Serilog" Version="0.*" />
-		<PackageReference Include="Xtate.IoProcessor.Http" Version="0.*" />
-		<PackageReference Include="Xtate.Service.HttpClient" Version="0.*" />
-		<PackageReference Include="Xtate.Service.SmtpClient" Version="0.*" />
+		<PackageReference Include="Xtate.IoC" />
+		<PackageReference Include="Xtate.Core" />
+		<PackageReference Include="Xtate.DataModel.EcmaScript" />
+		<PackageReference Include="Xtate.Logger.Serilog" />
+		<PackageReference Include="Xtate.IoProcessor.Http" />
+		<PackageReference Include="Xtate.Service.HttpClient" />
+		<PackageReference Include="Xtate.Service.SmtpClient" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -17,11 +17,24 @@
 
 //using Microsoft.Extensions.DependencyInjection;
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Serilog.Sinks.Graylog;
+using Xtate.Core;
 using Xtate.IoC;
 
 namespace Xtate.Test;
+
+public class UnitTestModule : Module<IocDebugModule, SerilogLoggerModule>
+{
+	protected override void AddServices()
+	{
+		var graylogSinkOptions = new GraylogSinkOptions { HostnameOrAddress = "log", Facility = "UnitTest" };
+
+		Services.Configure<SerilogLoggerOptions>(options => options.MinimumLevel.Verbose().WriteTo.Graylog(graylogSinkOptions));
+	}
+}
 
 [TestClass]
 public class UnitTest1
@@ -34,14 +47,15 @@ public class UnitTest1
 
         // Act
         serviceCollection.AddModule<XtateModule>();
-        serviceCollection.AddModule<DebugTraceModule>();
+        serviceCollection.AddModule<IocDebugModule>();
+        serviceCollection.AddModule<ConsoleTraceListenerModule>();
         serviceCollection.BuildProvider();
 
-        // Assert
-        // Add assertions if necessary
-    }
+		// Assert
+		// Add assertions if necessary
+	}
 
-    [TestMethod]
+	[TestMethod]
     public async Task TestInterStateMachineCommunication()
     {
         // Arrange
@@ -75,15 +89,59 @@ public class UnitTest1
             </scxml>
             """;
 
-        await using var xtateApplication = XtateApplication.Create();
+		await using var xtateApplication = XtateApplication.CreateBuilder().AddModule<UnitTestModule>().Build();
 
         // Act
-        var sm2Task = xtateApplication.ExecuteStateMachine(scxml2, arguments: default, SessionId.FromString("Session2")).AsTask();
-        var sm1Task = xtateApplication.ExecuteStateMachine(scxml1, arguments: default, SessionId.FromString("Session1")).AsTask();
+        var sm2Task = xtateApplication.ExecuteStateMachine(scxml2, sessionId: "Session2").AsTask();
+        var sm1Task = xtateApplication.ExecuteStateMachine(scxml1, sessionId: "Session1").AsTask();
         var results = await Task.WhenAll(sm1Task, sm2Task);
 
         // Assert
         Assert.AreEqual(expected: "FIN1", results[0]);
         Assert.AreEqual(expected: "FIN2", results[1]);
     }
+
+	[TestMethod]
+	public async Task DestroyTest()
+	{
+		// Arrange
+		const string scxml1 =
+			"""
+			<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'>
+			         <state id='state1'>
+			             <onexit>
+			                 <send event='event1' target='#_scxml_Session2'/>
+			             </onexit>
+			         </state>
+			</scxml>
+			""";
+
+		const string scxml2 =
+			"""
+			<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'>
+			    <state id='state1'>
+			        <transition event='event1' target='state2'/>
+			    </state>
+			    <final id='state2'>
+			        <onentry>
+			            <send event='event2' target='#_scxml_Session1'/>
+			        </onentry>
+			        <donedata><content>FIN2</content></donedata>
+			    </final>
+			</scxml>
+			""";
+
+		await using var xtateApplication = XtateApplication.CreateBuilder().AddModule<UnitTestModule>().Build();
+
+		// Act
+		var sm2Task = xtateApplication.ExecuteStateMachine(scxml2, sessionId: "Session2").AsTask();
+		await xtateApplication.StartStateMachine(scxml1, sessionId: "Session1");
+
+		await xtateApplication.DestroyStateMachine("Session1");
+
+		await sm2Task;
+
+		// Assert
+		Assert.AreEqual(expected: "FIN2", await sm2Task);
+	}
 }
